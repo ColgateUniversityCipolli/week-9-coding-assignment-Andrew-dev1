@@ -1,0 +1,218 @@
+\documentclass{article}\usepackage[]{graphicx}\usepackage[]{xcolor}
+% maxwidth is the original width if it is less than linewidth
+% otherwise use linewidth (to make sure the graphics do not exceed the margin)
+\makeatletter
+\def\maxwidth{ %
+  \ifdim\Gin@nat@width>\linewidth
+    \linewidth
+  \else
+    \Gin@nat@width
+  \fi
+}
+\makeatother
+
+\definecolor{fgcolor}{rgb}{0.345, 0.345, 0.345}
+\newcommand{\hlnum}[1]{\textcolor[rgb]{0.686,0.059,0.569}{#1}}%
+\newcommand{\hlsng}[1]{\textcolor[rgb]{0.192,0.494,0.8}{#1}}%
+\newcommand{\hlcom}[1]{\textcolor[rgb]{0.678,0.584,0.686}{\textit{#1}}}%
+\newcommand{\hlopt}[1]{\textcolor[rgb]{0,0,0}{#1}}%
+\newcommand{\hldef}[1]{\textcolor[rgb]{0.345,0.345,0.345}{#1}}%
+\newcommand{\hlkwa}[1]{\textcolor[rgb]{0.161,0.373,0.58}{\textbf{#1}}}%
+\newcommand{\hlkwb}[1]{\textcolor[rgb]{0.69,0.353,0.396}{#1}}%
+\newcommand{\hlkwc}[1]{\textcolor[rgb]{0.333,0.667,0.333}{#1}}%
+\newcommand{\hlkwd}[1]{\textcolor[rgb]{0.737,0.353,0.396}{\textbf{#1}}}%
+\let\hlipl\hlkwb
+
+\usepackage{framed}
+\makeatletter
+\newenvironment{kframe}{%
+ \def\at@end@of@kframe{}%
+ \ifinner\ifhmode%
+  \def\at@end@of@kframe{\end{minipage}}%
+  \begin{minipage}{\columnwidth}%
+ \fi\fi%
+ \def\FrameCommand##1{\hskip\@totalleftmargin \hskip-\fboxsep
+ \colorbox{shadecolor}{##1}\hskip-\fboxsep
+     % There is no \\@totalrightmargin, so:
+     \hskip-\linewidth \hskip-\@totalleftmargin \hskip\columnwidth}%
+ \MakeFramed {\advance\hsize-\width
+   \@totalleftmargin\z@ \linewidth\hsize
+   \@setminipage}}%
+ {\par\unskip\endMakeFramed%
+ \at@end@of@kframe}
+\makeatother
+
+\definecolor{shadecolor}{rgb}{.97, .97, .97}
+\definecolor{messagecolor}{rgb}{0, 0, 0}
+\definecolor{warningcolor}{rgb}{1, 0, 1}
+\definecolor{errorcolor}{rgb}{1, 0, 0}
+\newenvironment{knitrout}{}{} % an empty environment to be redefined in TeX
+
+\usepackage{alltt}
+\usepackage[margin=1.0in]{geometry} % To set margins
+\usepackage{amsmath}  % This allows me to use the align functionality.
+                      % If you find yourself trying to replicate
+                      % something you found online, ensure you're
+                      % loading the necessary packages!
+\usepackage{amsfonts} % Math font
+\usepackage{fancyvrb}
+\usepackage{hyperref} % For including hyperlinks
+\usepackage[shortlabels]{enumitem}% For enumerated lists with labels specified
+                                  % We had to run tlmgr_install("enumitem") in R
+\usepackage{float}    % For telling R where to put a table/figure
+\usepackage{natbib}        %For the bibliography
+\bibliographystyle{apalike}%For the bibliography
+\IfFileExists{upquote.sty}{\usepackage{upquote}}{}
+\begin{document}
+
+In lecture 16, we looked at precipitation amounts in Madison County (at 
+Morrisville station). We found that the Weibull distribution had a good fit
+to the monthly precipitation amounts.\\
+
+
+We found that the MLEs for the Weibull distribution were 
+\begin{align*}
+    \hat{a}&=2.1871\\
+    \hat{\sigma}&=3.9683
+\end{align*}
+and
+\[-\mathcal{L}(\{\hat{a}, \hat{\sigma}\}|\mathbf{x}) = 2166.496\]
+is the realized negative log-likelihood.
+Note this means that the log-likelihood is
+\[\mathcal{L}(\{\hat{a}, \hat{\sigma}\}|\mathbf{x}) = -2166.496,\]
+and the usual likelihood is
+\[L(\{\hat{a}, \hat{\sigma}\}|\mathbf{x}) = e^{\left[\mathcal{L}(\{\hat{a}, \hat{\sigma}\}|\mathbf{x})\right]} \approx = e^{-2166.496},\]
+which \texttt{R} cannot differentiate from 0.
+
+\begin{enumerate}
+  \item Someone asked ``why Weibull?" in class. That is, why wouldn't we use 
+  another right-skewed distribution like the Gamma (see Lecture 15), or
+  the Log-Normal (see Lecture 17).
+  \begin{enumerate}
+    \item Compute the MLEs for these data using a Gamma distribution. 
+\begin{knitrout}
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
+\begin{alltt}
+\hldef{llgamma} \hlkwb{<-} \hlkwa{function}\hldef{(}\hlkwc{data}\hldef{,} \hlkwc{par}\hldef{,} \hlkwc{neg}\hldef{=F)\{}
+\hldef{alpha} \hlkwb{<-} \hldef{par[}\hlnum{1}\hldef{]}
+\hldef{beta} \hlkwb{<-} \hldef{par[}\hlnum{2}\hldef{]}
+
+\hldef{loglik} \hlkwb{<-} \hlkwd{sum}\hldef{(}\hlkwd{log}\hldef{(}\hlkwd{dgamma}\hldef{(}\hlkwc{x}\hldef{=data,} \hlkwc{shape}\hldef{=alpha,} \hlkwc{rate}\hldef{=beta)),} \hlkwc{na.rm} \hldef{= T)}
+
+\hlkwd{return}\hldef{(}\hlkwd{ifelse}\hldef{(neg,} \hlopt{-}\hldef{loglik, loglik))}
+\hldef{\}}
+
+\hldef{mles.gamma} \hlkwb{<-} \hlkwd{optim}\hldef{(}\hlkwc{par} \hldef{=} \hlkwd{c}\hldef{(}\hlnum{1}\hldef{,}\hlnum{1}\hldef{),}
+           \hlkwc{fn} \hldef{= llgamma,}
+           \hlkwc{data}\hldef{= dat.precip.long}\hlopt{$}\hldef{Precipitation,}
+           \hlkwc{neg}\hldef{=T)}
+\hldef{(alpha} \hlkwb{<-} \hldef{mles.gamma}\hlopt{$}\hldef{par[}\hlnum{1}\hldef{])}
+\end{alltt}
+\begin{verbatim}
+## [1] 4.174581
+\end{verbatim}
+\begin{alltt}
+\hldef{(beta} \hlkwb{<-} \hldef{mles.gamma}\hlopt{$}\hldef{par[}\hlnum{2}\hldef{])}
+\end{alltt}
+\begin{verbatim}
+## [1] 1.189099
+\end{verbatim}
+\end{kframe}
+\end{knitrout}
+    \item Compute the MLEs for these data using the Log-Normal distribution.
+\begin{knitrout}
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
+\begin{alltt}
+\hldef{lognorm} \hlkwb{<-} \hlkwa{function}\hldef{(}\hlkwc{data}\hldef{,} \hlkwc{par}\hldef{,} \hlkwc{neg}\hldef{=F)\{}
+ \hldef{mean} \hlkwb{<-} \hldef{par[}\hlnum{1}\hldef{]}
+ \hldef{sd} \hlkwb{<-} \hldef{par[}\hlnum{2}\hldef{]}
+
+
+ \hldef{loglik} \hlkwb{<-} \hlkwd{sum}\hldef{(}\hlkwd{log}\hldef{(}\hlkwd{dlnorm}\hldef{(}\hlkwc{x}\hldef{=data,} \hlkwc{meanlog} \hldef{= mean,} \hlkwc{sdlog} \hldef{= sd)),} \hlkwc{na.rm} \hldef{= T)}
+
+ \hlkwd{return}\hldef{(}\hlkwd{ifelse}\hldef{(neg,} \hlopt{-}\hldef{loglik, loglik))}
+\hldef{\}}
+
+\hldef{mles.ln} \hlkwb{<-} \hlkwd{optim}\hldef{(}\hlkwc{par} \hldef{=} \hlkwd{c}\hldef{(}\hlnum{1}\hldef{,}\hlnum{0.5}\hldef{),}
+            \hlkwc{fn} \hldef{= lognorm,}
+            \hlkwc{data}\hldef{= dat.precip.long}\hlopt{$}\hldef{Precipitation,}
+            \hlkwc{neg}\hldef{=T)}
+\hldef{(mu} \hlkwb{<-} \hldef{mles.ln}\hlopt{$}\hldef{par[}\hlnum{1}\hldef{])}
+\end{alltt}
+\begin{verbatim}
+## [1] 1.131456
+\end{verbatim}
+\begin{alltt}
+\hldef{(sigma} \hlkwb{<-} \hldef{mles.ln}\hlopt{$}\hldef{par[}\hlnum{2}\hldef{])}
+\end{alltt}
+\begin{verbatim}
+## [1] 0.5333391
+\end{verbatim}
+\end{kframe}
+\end{knitrout}
+    \item Compute the likelihood ratio to compare the Weibull and the Gamma distribution. 
+    Which has a better fit according to the likelhiood ratio?
+    \[Q = \frac{L(\{\hat{a}, \hat{\sigma}\}|\mathbf{x})}{L(\{\hat{\alpha}, \hat{\beta}\}|\mathbf{x})}=e^{\left[\mathcal{L}(\{\hat{a}, \hat{\sigma}\}|\mathbf{x}) - \mathcal{L}(\{\hat{\alpha}, \hat{\beta}\}|\mathbf{x})\right]}\]
+\begin{knitrout}
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
+\begin{alltt}
+\hldef{neg.llweibull} \hlkwb{<-} \hlopt{-}\hlnum{2166.496}
+\hldef{neg.llgamma} \hlkwb{<-} \hlopt{-}\hldef{(mles.gamma}\hlopt{$}\hldef{value)}
+\hldef{(weibull.gamma.ratio} \hlkwb{<-} \hlkwd{exp}\hldef{(neg.llweibull}\hlopt{-}\hldef{neg.llgamma))}
+\end{alltt}
+\begin{verbatim}
+## [1] 2.161318e-07
+\end{verbatim}
+\end{kframe}
+\end{knitrout}
+Since the ratio is extremely small, the likelihood for the weibull distribution is smaller than the gamma and suggests that the gamma distribution is a better fit to this data set. \newline
+
+    \item Compute the likelihood ratio to compare the Weibull and the Log-Normal distribution.
+    Which has a better fit according to the likelihood ratio?
+    \[Q = \frac{L(\{\hat{a}, \hat{\sigma}\}|\mathbf{x})}{L(\{\hat{\mu}, \hat{\sigma}\}|\mathbf{x})}=e^{\left[\mathcal{L}(\{\hat{a}, \hat{\sigma}\}|\mathbf{x}) - \mathcal{L}(\{\hat{\mu}, \hat{\sigma}\}|\mathbf{x})\right]}\]
+\begin{knitrout}
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
+\begin{alltt}
+\hldef{neg.llweibull} \hlkwb{<-} \hlopt{-}\hlnum{2166.496}
+\hldef{neg.lognorm} \hlkwb{<-} \hlopt{-}\hldef{(mles.ln}\hlopt{$}\hldef{value)}
+\hldef{(weibull.lognorm.ratio} \hlkwb{<-} \hlkwd{exp}\hldef{(neg.llweibull}\hlopt{-}\hldef{neg.lognorm))}
+\end{alltt}
+\begin{verbatim}
+## [1] 2.370663e+16
+\end{verbatim}
+\end{kframe}
+\end{knitrout}
+Since the ratio is extremely large, the likelihood for the weibull distribution is greater than the log-normal and suggests that the weibull distribution is a better fit to this data set. \newline
+
+    \item Compute the likelihood ratio to compare the Gamma and the Log-Normal distribution.
+    Which has a better fit according to the likelhiood ratio?
+    \[Q = \frac{L(\{\hat{\alpha}, \hat{\beta}\}|\mathbf{x})}{L(\{\hat{\mu}, \hat{\sigma}\}|\mathbf{x})}=e^{\left[\mathcal{L}(\{\hat{\alpha}, \hat{\beta}\}|\mathbf{x}) - \mathcal{L}(\{\hat{\mu}, \hat{\sigma}\}|\mathbf{x})\right]}\]
+    
+\begin{knitrout}
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
+\begin{alltt}
+\hldef{(gamma.lognorm.ratio} \hlkwb{<-} \hlkwd{exp}\hldef{(neg.llgamma}\hlopt{-}\hldef{neg.lognorm))}
+\end{alltt}
+\begin{verbatim}
+## [1] 1.09686e+23
+\end{verbatim}
+\end{kframe}
+\end{knitrout}
+Since the ratio is extremely large, the likelihood for the gamma distribution is greater than the log-normal and suggests that the gamma distribution is a better fit to this data set. \newline
+
+  \end{enumerate}
+  \item Optional Coding Challenge. Choose the ``best" distribution and refit the
+  model by season.
+  \begin{enumerate}
+    \item Fit the Distribution for Winter (December-February).
+    \item Fit the Distribution for Spring (March-May).
+    \item Fit the Distribution for Summer (June-August).
+    \item Fit the Distribution for Fall (September-November).
+    \item Plot the four distributions in one plot using \texttt{cyan3} for Winter,
+    \texttt{chartreuse3} for Spring, \texttt{red3} for Summer, and \texttt{chocolate3}
+    for Fall. Note any similarities/differences you observe across the seasons.
+  \end{enumerate}
+\end{enumerate}
+
+\bibliography{bibliography}
+\end{document}
